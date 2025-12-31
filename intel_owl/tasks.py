@@ -248,12 +248,18 @@ def job_pipeline(
     job_id: int,
 ):
     from api_app.models import Job
+    from api_app.websocket import JobConsumer
 
     job = Job.objects.get(pk=job_id)
     try:
         job.execute()
     except Exception as e:
         logger.exception(e)
+        job.status = Job.STATUSES.FAILED.value
+        max_error_len = Job._meta.get_field("errors").base_field.max_length
+        job.errors = list(job.errors or []) + [str(e)[:max_error_len]]
+        job.finished_analysis_time = now()
+        job.save(update_fields=["status", "errors", "finished_analysis_time"])
         for report in (
             list(job.analyzerreports.all())
             + list(job.connectorreports.all())
@@ -262,6 +268,12 @@ def job_pipeline(
         ):
             report.status = report.STATUSES.FAILED.value
             report.save()
+        JobConsumer.serialize_and_send_job(job)
+        if root_investigation := job.get_root().investigation:
+            from api_app.investigations_manager.models import Investigation
+
+            root_investigation: Investigation
+            root_investigation.set_correct_status(save=True)
 
 
 @shared_task(base=FailureLoggedTask, name="run_plugin", soft_time_limit=500)
