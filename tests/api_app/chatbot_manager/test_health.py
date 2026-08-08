@@ -88,6 +88,15 @@ class ChatbotHealthTestCase(APITestCase):
         mock_get.return_value = MagicMock(ok=True)
         self.assertFalse(chatbot_health().available)
 
+    def test_chatbot_queue_setting_configured_from_secrets(self):
+        with patch(
+            "intel_owl.secrets.get_secret",
+            side_effect=lambda name, default=None: "custom_queue" if name == "CHATBOT_QUEUE" else default,
+        ):
+            from intel_owl.settings import chatbot
+
+            self.assertEqual(chatbot.CHATBOT_QUEUE, "custom_queue")
+
 
 class ChatHealthViewTestCase(APITestCase):
     URL = "/api/chatbot/health"

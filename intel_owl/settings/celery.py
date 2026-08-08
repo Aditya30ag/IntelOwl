@@ -5,6 +5,7 @@
 
 from ._util import get_secret
 from .aws import AWS_SQS
+from .chatbot import CHATBOT_QUEUE
 
 RESULT_BACKEND = "django-db"
 BROKER_URL = get_secret("BROKER_URL", None)
@@ -18,7 +19,6 @@ DEFAULT_QUEUE = "default"
 BROADCAST_QUEUE = "broadcast"
 CONFIG_QUEUE = "config"
 
-CHATBOT_QUEUE = "chatbot"
 
 CELERY_QUEUES = get_secret("CELERY_QUEUES", DEFAULT_QUEUE).split(",")
 for queue in [DEFAULT_QUEUE, CONFIG_QUEUE, CHATBOT_QUEUE]:
