@@ -96,3 +96,6 @@ OLLAMA_KEEP_ALIVE=-1
 CHATBOT_MESSAGE_RETENTION_DAYS=90
 CHATBOT_RATE_LIMIT=5
 CHATBOT_RATE_LIMIT_WINDOW=60
+# Celery queue carrying the chat turns. Read by both the task routing and the dedicated chatbot
+# worker, so changing it moves both ends together. Default: chatbot
+CHATBOT_QUEUE=chatbot

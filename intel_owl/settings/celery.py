@@ -18,7 +18,13 @@ DEFAULT_QUEUE = "default"
 BROADCAST_QUEUE = "broadcast"
 CONFIG_QUEUE = "config"
 
-CHATBOT_QUEUE = "chatbot"
+# The dedicated chatbot worker consumes this same variable (docker/entrypoints/celery_chatbot.sh),
+# so the queue the chat task is published to and the queue that worker drains cannot drift apart.
+# `or` instead of a default argument: an empty value falls back like the shell's
+# ${CHATBOT_QUEUE:-chatbot}, so both ends agree on unset *and* blank. Read from the environment
+# only (not intel_owl.secrets, which would also consult AWS Secrets Manager) precisely because the
+# worker entrypoint is a shell script: a value only Django could resolve would re-create the drift.
+CHATBOT_QUEUE = get_secret("CHATBOT_QUEUE") or "chatbot"
 
 CELERY_QUEUES = get_secret("CELERY_QUEUES", DEFAULT_QUEUE).split(",")
 for queue in [DEFAULT_QUEUE, CONFIG_QUEUE, CHATBOT_QUEUE]:

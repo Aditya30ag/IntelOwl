@@ -16,7 +16,9 @@ OLLAMA_MODEL = secrets.get_secret("OLLAMA_MODEL", "qwen2.5:3b")
 # chatbot is already opt-in (the separate ollama compose override), so an operator running it has
 # accepted the model's memory cost. Constrained deploys can set a duration ("5m") or "0" (unload now).
 OLLAMA_KEEP_ALIVE = secrets.get_secret("OLLAMA_KEEP_ALIVE", "-1")
-CHATBOT_QUEUE = secrets.get_secret("CHATBOT_QUEUE", "chatbot")
+# CHATBOT_QUEUE is defined in .celery, next to the other queue names and the CELERY_QUEUES loop
+# that registers it. Defining it here too would shadow that one depending on the wildcard import
+# order in settings/__init__.py.
 CHATBOT_MESSAGE_RETENTION_DAYS = int(secrets.get_secret("CHATBOT_MESSAGE_RETENTION_DAYS", 90))
 
 # Per-user rate limiting (messages / minute). Shared between REST and WebSocket;

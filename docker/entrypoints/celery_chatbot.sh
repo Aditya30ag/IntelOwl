@@ -5,11 +5,15 @@ do
     echo "Waiting for server volume..."
 done
 
+# Same variable Django routes the chat task with (settings.CHATBOT_QUEUE): the two must name the
+# same queue, or turns are published where no worker is listening.
+chatbot_queue="${CHATBOT_QUEUE:-chatbot}"
+
 if [ "$AWS_SQS" = "True" ]
 then
-  queues="chatbot.fifo,config.fifo"
+  queues="${chatbot_queue}.fifo,config.fifo"
 else
-  queues="chatbot,broadcast,config"
+  queues="${chatbot_queue},broadcast,config"
 fi
 
 # Concurrency is intentionally low (-c 2): a chat turn is a long, LLM-bound ReAct run
