@@ -71,4 +71,4 @@ class Slack(Connector):
 
     def run(self) -> dict:
         self.client.chat_postMessage(text=f"{self.title}\n{self.body}", channel=self._channel, mrkdwn=True)
-        return {}
+        return {"channel": self._channel, "message": "Notification sent successfully"}
