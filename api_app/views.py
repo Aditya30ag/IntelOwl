@@ -1317,7 +1317,7 @@ class PythonConfigViewSet(AbstractConfigViewSet):
             raise ValidationError({"detail": "No healthcheck implemented"})
         except Exception as e:
             logger.exception(e)
-            raise ValidationError({"detail": str(e) or "Unexpected exception raised. Check the code."})
+            raise ValidationError({"detail": "Unexpected exception raised. Check the code."})
         else:
             return Response(
                 data={"status": health_status, "message": health_message}, status=status.HTTP_200_OK
