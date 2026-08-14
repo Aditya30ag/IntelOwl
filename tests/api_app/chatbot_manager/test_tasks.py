@@ -12,6 +12,7 @@ from langgraph.errors import GraphRecursionError
 
 from api_app.chatbot_manager import events
 from api_app.chatbot_manager.models import ChatMessage, ChatSession
+from api_app.chatbot_manager.placeholder_guard import PLACEHOLDER_NOTICE
 from api_app.chatbot_manager.tasks import delete_old_chat_sessions, process_chat_message
 from certego_saas.apps.user.models import User
 
@@ -246,3 +247,32 @@ class ProcessChatMessageTestCase(TestCase):
         self.assertEqual(self._event_types(layer), [events.ChatEventType.ERROR.value])
         error_payload = layer.group_send.call_args_list[0].args[1]["payload"]
         self.assertEqual(error_payload["detail"], events.ChatErrorDetail.SESSION_NOT_FOUND.value)
+
+    @patch("api_app.chatbot_manager.tasks.get_channel_layer")
+    @patch("api_app.chatbot_manager.agent.agent.build_agent")
+    def test_fabricated_names_are_annotated_before_persist_and_end(self, mock_build, mock_get_layer):
+        layer = self._patched_layer(mock_get_layer)
+        chat_agent, _ = _chat_agent(items=_final("Use [Playbook X] for this observable."))
+        mock_build.return_value = chat_agent
+
+        process_chat_message(self.session.id, "which playbook?", self.user.id)
+
+        stored = ChatMessage.objects.get(session=self.session, role=ChatMessage.Role.ASSISTANT)
+        self.assertIn(PLACEHOLDER_NOTICE, stored.content)
+        # chat.end is what the frontend renders (it discards the streamed buffer), so the notice
+        # must be on the wire too, not only in the database.
+        end_payload = layer.group_send.call_args_list[-1].args[1]["payload"]
+        self.assertEqual(end_payload["content"], stored.content)
+        self.assertEqual(end_payload["message_id"], stored.id)
+
+    @patch("api_app.chatbot_manager.tasks.get_channel_layer")
+    @patch("api_app.chatbot_manager.agent.agent.build_agent")
+    def test_clean_answer_is_persisted_unannotated(self, mock_build, mock_get_layer):
+        self._patched_layer(mock_get_layer)
+        chat_agent, _ = _chat_agent(items=_final("Job #42 is malicious."))
+        mock_build.return_value = chat_agent
+
+        process_chat_message(self.session.id, "is job 42 malicious?", self.user.id)
+
+        stored = ChatMessage.objects.get(session=self.session, role=ChatMessage.Role.ASSISTANT)
+        self.assertEqual(stored.content, "Job #42 is malicious.")

@@ -14,6 +14,7 @@ from rest_framework.test import APITestCase
 
 from api_app.chatbot_manager.events import ChatErrorDetail
 from api_app.chatbot_manager.models import ChatMessage, ChatSession
+from api_app.chatbot_manager.placeholder_guard import PLACEHOLDER_NOTICE
 from certego_saas.apps.user.models import User
 
 _ANSWER = "Here are your recent jobs."
@@ -88,6 +89,21 @@ class ChatSessionViewSetTestCase(APITestCase):
             [(type(m), m.content) for m in invoke_input["messages"]],
             [(HumanMessage, "prev q"), (AIMessage, "prev a"), (HumanMessage, "Hello")],
         )
+
+    @patch(
+        "api_app.chatbot_manager.views.build_agent",
+        return_value=_agent(invoke_return={"messages": [AIMessage(content="Use [Playbook X].")]}),
+    )
+    def test_message_annotates_fabricated_names(self, mock_build):
+        # The REST fallback must behave exactly like the WebSocket path; a divergence between the
+        # two is its own defect.
+        response = self.client.post(self.MESSAGE_URL, data={"message": "which playbook?"}, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+        self.assertIn(PLACEHOLDER_NOTICE, data["response"])
+        stored = ChatMessage.objects.get(pk=data["message_id"])
+        self.assertEqual(stored.content, data["response"])
 
     @patch("api_app.chatbot_manager.views.build_agent")
     def test_message_iteration_cap_returns_error_and_drops_the_turn(self, mock_build):

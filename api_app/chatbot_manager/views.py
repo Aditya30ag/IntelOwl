@@ -25,6 +25,7 @@ from .events import ChatErrorDetail
 from .health import chatbot_health
 from .models import ChatMessage, ChatSession
 from .pending_action import consume_pending_analysis
+from .placeholder_guard import guard_answer
 from .rate_limit import _build_rate_limiter
 from .serializers.analyze_observable import ConfirmAnalysisResultSerializer, flatten_errors
 from .serializers.chat import (
@@ -136,6 +137,10 @@ class ChatSessionViewSet(ModelViewSet):
                 status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
         response_text = final_answer(result["messages"])
+        # Same guard as the WebSocket path (tasks.py), at the same point in the flow: on the final
+        # answer, before it is persisted and returned. It sits outside the try/except because
+        # final_answer does too — the block guards the agent run itself, not the post-processing.
+        response_text = guard_answer(response_text, session_id=session.pk)
 
         history.add_user_message(user_message)
         history.add_ai_message(response_text)

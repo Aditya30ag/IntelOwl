@@ -22,6 +22,7 @@ from api_app.chatbot_manager.events import (
     StartEvent,
     chat_group_for_user,
 )
+from api_app.chatbot_manager.placeholder_guard import guard_answer
 from intel_owl.tasks import FailureLoggedTask
 
 logger = logging.getLogger(__name__)
@@ -92,6 +93,12 @@ def process_chat_message(session_id: int, user_message: str, user_id: int, conte
         # as a messages list, the create_agent input shape.
         inputs = {"messages": [*chat_history, HumanMessage(content=user_message)]}
         response_text = consumer.run(chat_agent.runnable, inputs, {"recursion_limit": RECURSION_LIMIT})
+        # Deterministic backstop for the prompt's anti-placeholder rule. It runs before the answer
+        # is persisted and emitted, so the stored history and the text the user reads never
+        # disagree; the tokens already streamed are only a live preview, and the frontend replaces
+        # them with chat.end's content. Kept inside the try so a failure here surfaces as a clean
+        # chat.error like any other turn failure.
+        response_text = guard_answer(response_text, session_id=session_id)
     except SoftTimeLimitExceeded:
         logger.warning(f"process_chat_message: timed out for session {session_id}")
         emit(ErrorEvent(session_id, ChatErrorDetail.TIMEOUT.value))

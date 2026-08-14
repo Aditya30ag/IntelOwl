@@ -4,6 +4,8 @@
 from langchain_core.chat_history import BaseChatMessageHistory
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 
+from api_app.chatbot_manager.placeholder_guard import strip_notice
+
 
 class DjangoChatMessageHistory(BaseChatMessageHistory):
     """LangChain chat history backed by the Django ChatMessage model.
@@ -27,7 +29,10 @@ class DjangoChatMessageHistory(BaseChatMessageHistory):
             if msg.role == ChatMessage.Role.USER:
                 result.append(HumanMessage(content=msg.content))
             else:
-                result.append(AIMessage(content=msg.content))
+                # The placeholder notice is an annotation added for the user after generation, not
+                # something the model wrote. Replaying it would put it in the model's context, where
+                # a small model may start imitating the format.
+                result.append(AIMessage(content=strip_notice(msg.content)))
         return result
 
     def add_message(self, message: BaseMessage) -> None:
