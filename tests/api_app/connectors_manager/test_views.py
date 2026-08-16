@@ -36,7 +36,10 @@ class ConnectorConfigViewSetTestCase(AbstractConfigViewSetTestCaseMixin, CustomV
             connector_config=connector,
         )
 
-        with patch("api_app.connectors_manager.connectors.yeti.YETI.health_check", return_value=True):
+        with patch(
+            "api_app.connectors_manager.connectors.yeti.YETI.health_check",
+            return_value=(True, "Connected successfully"),
+        ):
             response = self.client.get(f"{self.URL}/{connector.name}/health_check")
             self.assertEqual(response.status_code, 200)
 
@@ -47,6 +50,7 @@ class ConnectorConfigViewSetTestCase(AbstractConfigViewSetTestCaseMixin, CustomV
         result = response.json()
         self.assertIn("status", result)
         self.assertTrue(result["status"])
+        self.assertEqual(result["message"], "Connected successfully")
         pc1.delete()
         pc2.delete()
 

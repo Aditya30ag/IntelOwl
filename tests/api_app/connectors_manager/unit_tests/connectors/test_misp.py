@@ -65,10 +65,8 @@ class MISPConnectorTestCase(BaseConnectorTest):
     def _setup_connector(self):
         connector = super()._setup_connector()
 
-        mock_tag = MagicMock()
-        mock_tag.label = "source:intelowl"
         connector._job.tags = MagicMock()
-        connector._job.tags.all.return_value = [mock_tag]
+        connector._job.tags.all.return_value.values_list.return_value = ["source:intelowl"]
 
         connector._job.analyzers_to_execute = MagicMock()
         connector._job.analyzers_to_execute.all.return_value.values_list.return_value = ["FireHol_IPList"]
@@ -178,7 +176,7 @@ class MISPConnectorTestCase(BaseConnectorTest):
             mock_instance = mock_client_cls.return_value
             mock_instance.health_check.return_value = True
 
-            self.assertTrue(connector.health_check())
+            self.assertTrue(connector.health_check()[0])
 
     @override_settings(STAGE_CI=False, MOCK_CONNECTIONS=False)
     def test_misp_health_check_failures(self):
@@ -205,8 +203,8 @@ class MISPConnectorTestCase(BaseConnectorTest):
                 side_effect=Exception("Connection refused"),
             ),
         ):
-            self.assertFalse(connector.health_check())
+            self.assertFalse(connector.health_check()[0])
 
         with self.subTest("Missing Configuration"):
             connector._config.parameters.annotate_configured.return_value.annotate_value_for_user.return_value = []
-            self.assertFalse(connector.health_check())
+            self.assertFalse(connector.health_check()[0])
