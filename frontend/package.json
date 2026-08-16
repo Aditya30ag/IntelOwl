@@ -1,6 +1,6 @@
 {
   "name": "intelowl",
-  "version": "6.7.0",
+  "version": "6.8.0",
   "private": true,
   "dependencies": {
     "@certego/certego-ui": "^0.1.19",
