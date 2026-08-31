@@ -66,13 +66,6 @@ You can see the full list of all available analyzers in the [documentation](http
 
 
 
-### Google Summer of Code
-<a href="https://summerofcode.withgoogle.com/"> <img style="border: 0.2px solid black" width=150 height=89 src="static/gsoc_logo.png" alt="GSoC logo"> </a>
-
-Since its birth this project has been participating in the [Google Summer of Code](https://summerofcode.withgoogle.com/) (GSoC)!
-
-If you are interested in participating in the next Google Summer of Code, check all the info available in the [dedicated repository](https://github.com/intelowlproject/gsoc)!
-
 
 ## About the current management status
 Since v6.8.0 important changes have been applied to the management of the project which is fully in [Certego](https://certego.net/?utm_source=intelowl) hands now. For more information please check [the discussion here](https://github.com/intelowlproject/IntelOwl/discussions/3654)
