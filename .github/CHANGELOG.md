@@ -5,7 +5,11 @@
 ## [v6.8.0](https://github.com/intelowlproject/IntelOwl/releases/tag/v6.8.0)
 This release merges all the developments performed by our Google Summer of Code contributors during the last month:
 * [Francesco Berardi](https://github.com/berardifra): ["Integrating a Self-Deployed LLM Chatbot for Threat Intelligence"](https://intelowlproject.github.io/blogs/gsoc26_llm_chatbot)
-* [Sanjib Behera](https://github.com/sanjib2006): "Integration Ecosystem & Connector Optimization"
+* [Sanjib Behera](https://github.com/sanjib2006): ["Integration Ecosystem & Connector Optimization"](https://intelowlproject.github.io/blogs/gsoc26_connector_ecosystem)
+
+Thank you guys for participating to the program!
+
+Also, please not that important changes in the IntelOwl manamagent will be applied starting from this release. See [this discussion here](https://github.com/intelowlproject/IntelOwl/discussions/3654) for more information about.
 
 ## [v6.7.0](https://github.com/intelowlproject/IntelOwl/releases/tag/v6.7.0)
 We welcome the first working AI-based integration in IntelOwl! :tada:
